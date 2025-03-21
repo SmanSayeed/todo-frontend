@@ -1,8 +1,9 @@
+// src/App.jsx
 import { useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import './App.css';
 import './index.css';
-import toast, { Toaster } from 'react-hot-toast';
+import { Toaster } from 'react-hot-toast';
 
 // Layouts
 import MainLayout from './components/layouts/MainLayout';
@@ -18,19 +19,20 @@ import { useAuthStore } from './hooks/useAuth';
 import { getAuthToken } from './utils/auth';
 
 function App() {
-  const { token, isAuthenticated, getProfile } = useAuthStore();
+  const { isAuthenticated, getProfile } = useAuthStore();
   
   // Initialize auth state from localStorage on app startup
   useEffect(() => {
-    const storedToken = getAuthToken();
+    const token = getAuthToken();
     
-    if (storedToken && !token && !isAuthenticated) {
+    // Only attempt to get profile if we have a token and aren't already authenticated
+    if (token && !isAuthenticated) {
+      // Set a loading state to prevent flashing of login screen
       getProfile().catch(error => {
-        console.error('Failed to get user profile', error);
-        toast.error('Session expired. Please login again.');
+        console.error('Failed to restore session:', error);
       });
     }
-  }, [token, isAuthenticated, getProfile]);
+  }, [isAuthenticated, getProfile]);
 
   return (
     <>
@@ -40,7 +42,6 @@ function App() {
         {/* Protected Routes */}
         <Route path="/" element={<MainLayout />}>
           <Route index element={<Home />} />
-          {/* Add more protected routes here */}
         </Route>
         
         {/* Auth Routes */}

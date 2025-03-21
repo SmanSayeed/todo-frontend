@@ -1,49 +1,40 @@
 // src/components/pages/Home/Home.jsx
-import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import Button from '../../ui/Button';
-import Loader from '../../ui/Loader';
+import React from 'react';
+import { useAuthStore } from '../../../hooks/useAuth';
 
 const Home = () => {
-
-
-  if (loading) {
-    return <Loader fullScreen />;
-  }
+  const { user } = useAuthStore();
 
   return (
     <div className="space-y-6">
       {/* Dashboard Header */}
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-        <Link to="/tasks/new">
-          <Button variant="primary">New Task</Button>
-        </Link>
       </div>
       
-   
+      {/* Welcome Message */}
+      <div className="bg-white shadow overflow-hidden sm:rounded-lg">
+        <div className="px-4 py-5 sm:px-6">
+          <h3 className="text-lg leading-6 font-medium text-gray-900">
+            Welcome to Task Manager
+          </h3>
+          <p className="mt-1 max-w-2xl text-sm text-gray-500">
+            Hello, {user?.name || 'User'}!
+          </p>
+        </div>
+        <div className="border-t border-gray-200 px-4 py-5 sm:p-6">
+          <p className="text-gray-700">
+            This is your personal task management dashboard. You can create, track, and manage your tasks efficiently.
+          </p>
+          <div className="mt-4">
+            <p className="text-sm text-gray-500">
+              Task functionality is being implemented. Stay tuned for updates!
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
-
-// Icon components
-function CalendarIcon(props) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      fill="none"
-      viewBox="0 0 24 24"
-      strokeWidth={1.5}
-      stroke="currentColor"
-      {...props}
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"
-      />
-    </svg>
-  );
-}
 
 export default Home;

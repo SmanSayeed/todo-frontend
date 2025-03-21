@@ -2,7 +2,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { authService } from '../api/authService';
-import config from '../config/apiConfig';
+import { setAuthToken } from '../utils/auth';
 
 export const useAuthStore = create(
   persist(
@@ -17,12 +17,17 @@ export const useAuthStore = create(
         set({ isLoading: true, error: null });
         try {
           const response = await authService.register(userData);
-          set({
-            user: response.data.user,
-            token: response.data.access_token,
-            isAuthenticated: true,
-            isLoading: false
-          });
+          
+          if (response.success && response.data.access_token) {
+            setAuthToken(response.data.access_token);
+            
+            set({
+              user: response.data.user,
+              token: response.data.access_token,
+              isAuthenticated: true,
+              isLoading: false
+            });
+          }
           return response;
         } catch (error) {
           set({ error: error.message, isLoading: false });
@@ -34,12 +39,17 @@ export const useAuthStore = create(
         set({ isLoading: true, error: null });
         try {
           const response = await authService.login(credentials);
-          set({
-            user: response.data.user,
-            token: response.data.access_token,
-            isAuthenticated: true,
-            isLoading: false
-          });
+          
+          if (response.success && response.data.access_token) {
+            setAuthToken(response.data.access_token);
+            
+            set({
+              user: response.data.user,
+              token: response.data.access_token,
+              isAuthenticated: true,
+              isLoading: false
+            });
+          }
           return response;
         } catch (error) {
           set({ error: error.message, isLoading: false });
@@ -54,6 +64,7 @@ export const useAuthStore = create(
         } catch (error) {
           console.error('Logout error:', error);
         } finally {
+          setAuthToken(null);
           set({
             user: null,
             token: null,
@@ -65,15 +76,40 @@ export const useAuthStore = create(
       },
       
       getProfile: async () => {
-        if (!get().isAuthenticated) return;
+        const state = get();
+        if (!state.token) return null;
         
-        set({ isLoading: true });
+        set({ isLoading: true, error: null });
         try {
           const response = await authService.getProfile();
-          set({ user: response.data, isLoading: false });
-          return response;
+          
+          if (response.success && response.data) {
+            set({ 
+              user: response.data,
+              isAuthenticated: true, 
+              isLoading: false 
+            });
+            return response.data;
+          }
+          
+          return null;
         } catch (error) {
-          set({ error: error.message, isLoading: false });
+          // If we get an authentication error, clear the state
+          if (error.status === 401) {
+            setAuthToken(null);
+            set({
+              user: null,
+              token: null,
+              isAuthenticated: false,
+              isLoading: false,
+              error: 'Authentication failed'
+            });
+          } else {
+            set({ 
+              error: error.message, 
+              isLoading: false 
+            });
+          }
           throw error;
         }
       }
@@ -81,7 +117,11 @@ export const useAuthStore = create(
     {
       name: 'auth-storage',
       getStorage: () => localStorage,
-      partialize: (state) => ({ user: state.user, token: state.token, isAuthenticated: state.isAuthenticated }),
+      partialize: (state) => ({ 
+        user: state.user, 
+        token: state.token, 
+        isAuthenticated: state.isAuthenticated 
+      }),
     }
   )
 );

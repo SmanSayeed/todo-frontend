@@ -1,6 +1,6 @@
 // src/components/layouts/MainLayout.jsx
 import React, { useState, useEffect } from 'react';
-import { Navigate, Outlet } from 'react-router-dom';
+import { Navigate, Outlet, useNavigate } from 'react-router-dom';
 import Navbar from './Navbar';
 import Sidebar from './Sidebar';
 import Toast from '../ui/Toast';
@@ -8,22 +8,45 @@ import Loader from '../ui/Loader';
 import { useAuthStore } from '../../hooks/useAuth';
 
 const MainLayout = () => {
-  const { isAuthenticated, isLoading, getProfile } = useAuthStore();
+  const navigate = useNavigate();
+  const { isAuthenticated, isLoading, getProfile, user } = useAuthStore();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [profileLoaded, setProfileLoaded] = useState(false);
+  const [profileError, setProfileError] = useState(false);
   
   useEffect(() => {
-    if (isAuthenticated && !profileLoaded) {
-      getProfile().then(() => setProfileLoaded(true));
+    // Only try to load profile if authenticated and not already loaded
+    if (isAuthenticated && !profileLoaded && !user) {
+      const loadProfile = async () => {
+        try {
+          await getProfile();
+          setProfileLoaded(true);
+        } catch (error) {
+          console.error('Failed to load user profile:', error);
+          setProfileError(true);
+          // Handle authentication error - redirect to login
+          if (error.status === 401) {
+            navigate('/login', { replace: true });
+          }
+        }
+      };
+      
+      loadProfile();
     }
-  }, [isAuthenticated, profileLoaded, getProfile]);
+    
+    // If we already have user data, consider the profile loaded
+    if (user && !profileLoaded) {
+      setProfileLoaded(true);
+    }
+  }, [isAuthenticated, profileLoaded, getProfile, user, navigate]);
   
   // Redirect to login if not authenticated
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
   
-  if (isLoading && !profileLoaded) {
+  // Show loading indicator while waiting for profile data
+  if (isLoading && !profileLoaded && !profileError) {
     return <Loader fullScreen />;
   }
   
@@ -52,8 +75,3 @@ const MainLayout = () => {
 };
 
 export default MainLayout;
-
-
-
-
-
