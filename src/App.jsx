@@ -1,4 +1,3 @@
-// src/App.jsx
 import { useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import './App.css';
@@ -14,29 +13,29 @@ import Home from './components/pages/Home/Home';
 import Login from './components/pages/Auth/Login';
 import Register from './components/pages/Auth/Register';
 
-// Auth Store
-import { useAuthStore } from './hooks/useAuth';
-import { getAuthToken } from './utils/auth';
+// Redux Auth Hook
+import { useAuthRedux } from './hooks/useAuthRedux';
 
 function App() {
-  const { isAuthenticated, getProfile } = useAuthStore();
+  const { isAuthenticated, loadToken } = useAuthRedux();
   
   // Initialize auth state from localStorage on app startup
   useEffect(() => {
-    const token = getAuthToken();
-    
-    // Only attempt to get profile if we have a token and aren't already authenticated
-    if (token && !isAuthenticated) {
-      // Set a loading state to prevent flashing of login screen
-      getProfile().catch(error => {
-        console.error('Failed to restore session:', error);
-      });
-    }
-  }, [isAuthenticated, getProfile]);
+    loadToken();
+  }, [loadToken]);
 
   return (
     <>
-      <Toaster position="top-right" />
+      <Toaster 
+        position="bottom-right"
+        toastOptions={{
+          duration: 4000,
+          style: {
+            background: '#363636',
+            color: '#fff',
+          },
+        }}
+      />
       
       <Routes>
         {/* Protected Routes */}

@@ -1,15 +1,13 @@
-// src/components/pages/Auth/Register.jsx
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import Input from '../../ui/Input';
 import Button from '../../ui/Button';
-import { useAuthStore } from '../../../hooks/useAuth';
+import { useAuthRedux } from '../../../hooks/useAuthRedux';
 
 const Register = () => {
   const navigate = useNavigate();
-  const register = useAuthStore((state) => state.register);
-  const isLoading = useAuthStore((state) => state.isLoading);
+  const { register, isLoading } = useAuthRedux();
   
   const [formData, setFormData] = useState({
     name: '',

@@ -1,9 +1,8 @@
-// src/components/pages/Home/Home.jsx
 import React from 'react';
-import { useAuthStore } from '../../../hooks/useAuth';
+import { useAuthRedux } from '../../../hooks/useAuthRedux';
 
 const Home = () => {
-  const { user } = useAuthStore();
+  const { user } = useAuthRedux();
 
   return (
     <div className="space-y-6">

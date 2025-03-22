@@ -1,15 +1,13 @@
-// src/components/pages/Auth/Login.jsx
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import Input from '../../ui/Input';
 import Button from '../../ui/Button';
-import { useAuthStore } from '../../../hooks/useAuth';
+import { useAuthRedux } from '../../../hooks/useAuthRedux';
 
 const Login = () => {
   const navigate = useNavigate();
-  const login = useAuthStore((state) => state.login);
-  const isLoading = useAuthStore((state) => state.isLoading);
+  const { login, isLoading, error } = useAuthRedux();
   
   const [formData, setFormData] = useState({
     email: '',

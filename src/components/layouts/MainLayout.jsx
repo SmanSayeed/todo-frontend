@@ -1,15 +1,14 @@
-// src/components/layouts/MainLayout.jsx
 import React, { useState, useEffect } from 'react';
 import { Navigate, Outlet, useNavigate } from 'react-router-dom';
 import Navbar from './Navbar';
 import Sidebar from './Sidebar';
 import Toast from '../ui/Toast';
 import Loader from '../ui/Loader';
-import { useAuthStore } from '../../hooks/useAuth';
+import { useAuthRedux } from '../../hooks/useAuthRedux';
 
 const MainLayout = () => {
   const navigate = useNavigate();
-  const { isAuthenticated, isLoading, getProfile, user } = useAuthStore();
+  const { isAuthenticated, isLoading, getProfile, user } = useAuthRedux();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [profileLoaded, setProfileLoaded] = useState(false);
   const [profileError, setProfileError] = useState(false);
@@ -52,7 +51,7 @@ const MainLayout = () => {
   
   return (
     <div className="min-h-screen bg-gray-100">
-      <Toast />
+      {/* <Toast /> */}
       
       <Navbar 
         setSidebarOpen={setSidebarOpen} 

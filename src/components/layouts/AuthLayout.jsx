@@ -1,11 +1,10 @@
-// src/components/layouts/AuthLayout.jsx
 import React from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import Toast from '../ui/Toast';
-import { useAuthStore } from '../../hooks/useAuth';
+import { useAuthRedux } from '../../hooks/useAuthRedux';
 
 const AuthLayout = () => {
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const { isAuthenticated } = useAuthRedux();
   
   // Redirect to home if already authenticated
   if (isAuthenticated) {
@@ -14,7 +13,7 @@ const AuthLayout = () => {
   
   return (
     <div className="min-h-screen bg-gray-100">
-      <Toast />
+      {/* <Toast /> */}
       <Outlet />
     </div>
   );
