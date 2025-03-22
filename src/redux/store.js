@@ -3,18 +3,20 @@ import { persistStore, persistReducer } from 'redux-persist';
 import storage from 'redux-persist/lib/storage'; // defaults to localStorage for web
 
 import authReducer from './slices/authSlice';
+import taskReducer from './slices/taskSlice';
 
 // Configuration for Redux Persist
 const persistConfig = {
   key: 'root',
   storage,
-  whitelist: ['auth'] // only auth will be persisted
+  whitelist: ['auth'], // only auth will be persisted
+  blacklist: ['tasks'] // tasks won't be persisted to avoid stale data
 };
 
 // Combine reducers
 const rootReducer = combineReducers({
   auth: authReducer,
-  // Add other reducers here as your app grows
+  tasks: taskReducer
 });
 
 // Create persisted reducer
