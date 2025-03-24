@@ -4,10 +4,16 @@ import Button from '../ui/Button';
 import { formatDate } from '../../utils/taskUtils';
 import { getStatusColorClass, isTaskOverdue } from '../../utils/taskUtils';
 import { useTasksRedux } from '../../hooks/useTaskRedux';
+import { TASK_STATUS_OPTIONS } from '../../constants/taskConstants';
+import EditableText from '../common/Editables/EditableText';
+import EditableSelect from '../common/Editables/EditableSelect';
+import EditableDate from '../common/Editables/EditableDate';
+import useInlineTaskEdit from '../../hooks/useInlineTaskEdit';
 
-const TaskCard = ({ task, onEdit }) => {
+const TaskCard = ({ task }) => {
   const { deleteTask, isLoading } = useTasksRedux();
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const { handleFieldUpdate, isUpdatingField } = useInlineTaskEdit(task);
   
   const handleDelete = async () => {
     if (!confirmDelete) {
@@ -31,29 +37,74 @@ const TaskCard = ({ task, onEdit }) => {
   
   const overdue = isTaskOverdue(task);
   
+  // Render loading indicator for a specific field
+  const renderFieldLoading = (fieldName) => {
+    if (isUpdatingField(fieldName)) {
+      return (
+        <span className="ml-2 inline-block w-4 h-4">
+          <svg className="animate-spin h-4 w-4 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+        </span>
+      );
+    }
+    return null;
+  };
+  
   return (
     <div className="bg-white shadow rounded-lg p-4 hover:shadow-md transition-shadow">
       <div className="flex justify-between items-start mb-2">
-        <h3 className="text-lg font-semibold text-gray-800 truncate pr-2">{task.name}</h3>
-        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColorClass(task.status)}`}>
-          {task.status}
-        </span>
+        <div className="flex-1 pr-2">
+          <EditableText
+            value={task.name}
+            onSave={(value) => handleFieldUpdate('name', value)}
+            placeholder="Task title"
+            displayClassName="text-lg font-semibold text-gray-800"
+            inputClassName="font-semibold text-lg"
+            maxLength={255}
+          />
+          {renderFieldLoading('name')}
+        </div>
+        
+        <EditableSelect
+          value={task.status}
+          onSave={(value) => handleFieldUpdate('status', value)}
+          options={TASK_STATUS_OPTIONS}
+          displayRenderer={(value) => (
+            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColorClass(value)}`}>
+              {value}
+            </span>
+          )}
+        />
+        {renderFieldLoading('status')}
       </div>
       
-      {task.description && (
-        <p className="text-gray-600 text-sm mb-4 line-clamp-3">{task.description}</p>
-      )}
+      <div className="mb-4">
+        <EditableText
+          value={task.description}
+          onSave={(value) => handleFieldUpdate('description', value)}
+          placeholder="Add a description..."
+          displayClassName="text-gray-600 text-sm"
+          inputClassName="text-sm"
+          multiline={true}
+        />
+        {renderFieldLoading('description')}
+      </div>
       
       <div className="mt-4 flex flex-col space-y-2">
-        {task.due_date && (
-          <div className="text-sm">
-            <span className="text-gray-500">Due: </span>
-            <span className={overdue ? 'text-red-600 font-medium' : 'text-gray-700'}>
-              {formatDate(task.due_date)}
-              {overdue && ' (Overdue)'}
-            </span>
-          </div>
-        )}
+        <div className="text-sm flex items-center">
+          <span className="text-gray-500 mr-1">Due: </span>
+          <span className={overdue ? 'text-red-600 font-medium' : 'text-gray-700'}>
+            <EditableDate
+              value={task.due_date}
+              onSave={(value) => handleFieldUpdate('due_date', value)}
+              displayClassName={overdue ? 'text-red-600 font-medium' : 'text-gray-700'}
+            />
+            {overdue && ' (Overdue)'}
+          </span>
+          {renderFieldLoading('due_date')}
+        </div>
         
         <div className="text-xs text-gray-500">
           Created: {formatDate(task.created_at)}
@@ -80,22 +131,13 @@ const TaskCard = ({ task, onEdit }) => {
             </Button>
           </>
         ) : (
-          <>
-            <Button 
-              size="sm" 
-              variant="outline" 
-              onClick={() => onEdit(task)}
-            >
-              Edit
-            </Button>
-            <Button 
-              size="sm" 
-              variant="danger" 
-              onClick={handleDelete}
-            >
-              Delete
-            </Button>
-          </>
+          <Button 
+            size="sm" 
+            variant="danger" 
+            onClick={handleDelete}
+          >
+            Delete
+          </Button>
         )}
       </div>
     </div>
