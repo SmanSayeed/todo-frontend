@@ -1,5 +1,6 @@
+// src/utils/taskUtils.js
 import { format, parseISO, isValid } from 'date-fns';
-import { DATE_FORMAT } from '../constants/taskConstants';
+import { TASK_STATUS } from '../constants/taskConstants';
 
 /**
  * Format a date string to the application's standard format
@@ -7,7 +8,7 @@ import { DATE_FORMAT } from '../constants/taskConstants';
  * @param {string} formatString - Optional custom format
  * @returns {string} - Formatted date
  */
-export const formatDate = (dateString, formatString = DATE_FORMAT) => {
+export const formatDate = (dateString, formatString = 'MMM dd, yyyy') => {
   if (!dateString) return '';
   
   try {
@@ -65,11 +66,11 @@ export const formatTaskForApi = (taskData) => {
  */
 export const getStatusColorClass = (status) => {
   switch (status) {
-    case 'To Do':
+    case TASK_STATUS.TODO:
       return 'bg-yellow-100 text-yellow-800';
-    case 'In Progress':
+    case TASK_STATUS.IN_PROGRESS:
       return 'bg-blue-100 text-blue-800';
-    case 'Done':
+    case TASK_STATUS.DONE:
       return 'bg-green-100 text-green-800';
     default:
       return 'bg-gray-100 text-gray-800';
@@ -82,7 +83,7 @@ export const getStatusColorClass = (status) => {
  * @returns {boolean} - True if overdue
  */
 export const isTaskOverdue = (task) => {
-  if (!task.due_date) return false;
+  if (!task.due_date || task.status === TASK_STATUS.DONE) return false;
   
   const dueDate = parseISO(task.due_date);
   const today = new Date();
@@ -91,5 +92,50 @@ export const isTaskOverdue = (task) => {
   dueDate.setHours(0, 0, 0, 0);
   today.setHours(0, 0, 0, 0);
   
-  return dueDate < today && task.status !== 'Done';
+  return dueDate < today;
+};
+
+/**
+ * Group tasks by status
+ * @param {Array} tasks - List of tasks
+ * @returns {Object} - Tasks grouped by status
+ */
+export const groupTasksByStatus = (tasks) => {
+  return tasks.reduce((acc, task) => {
+    if (!acc[task.status]) {
+      acc[task.status] = [];
+    }
+    acc[task.status].push(task);
+    return acc;
+  }, {});
+};
+
+/**
+ * Get the status color for kanban board columns
+ * @param {string} status - Task status
+ * @returns {Object} - Styles object with background and border colors
+ */
+export const getStatusColumnStyles = (status) => {
+  switch (status) {
+    case TASK_STATUS.TODO:
+      return {
+        background: 'bg-yellow-50',
+        border: 'border-yellow-200'
+      };
+    case TASK_STATUS.IN_PROGRESS:
+      return {
+        background: 'bg-blue-50',
+        border: 'border-blue-200'
+      };
+    case TASK_STATUS.DONE:
+      return {
+        background: 'bg-green-50',
+        border: 'border-green-200'
+      };
+    default:
+      return {
+        background: 'bg-gray-50',
+        border: 'border-gray-200'
+      };
+  }
 };

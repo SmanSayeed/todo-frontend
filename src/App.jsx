@@ -15,6 +15,7 @@ import Register from './components/pages/Auth/Register';
 
 // Redux Auth Hook
 import { useAuthRedux } from './hooks/useAuthRedux';
+import Task from './components/pages/Task/Task';
 
 function App() {
   const { isAuthenticated, loadToken } = useAuthRedux();
@@ -41,6 +42,8 @@ function App() {
         {/* Protected Routes */}
         <Route path="/" element={<MainLayout />}>
           <Route index element={<Home />} />
+          <Route path="/tasks" element={<Task />} />
+          <Route index element={<Task />} />
         </Route>
         
         {/* Auth Routes */}
