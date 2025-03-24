@@ -117,25 +117,33 @@ export const groupTasksByStatus = (tasks) => {
  */
 export const getStatusColumnStyles = (status) => {
   switch (status) {
-    case TASK_STATUS.TODO:
+    case 'To Do':
       return {
         background: 'bg-yellow-50',
-        border: 'border-yellow-200'
+        border: 'border-yellow-200',
+        headerColor: 'text-yellow-800',
+        headerBackground: 'bg-yellow-100'
       };
-    case TASK_STATUS.IN_PROGRESS:
+    case 'In Progress':
       return {
         background: 'bg-blue-50',
-        border: 'border-blue-200'
+        border: 'border-blue-200',
+        headerColor: 'text-blue-800',
+        headerBackground: 'bg-blue-100'
       };
-    case TASK_STATUS.DONE:
+    case 'Done':
       return {
         background: 'bg-green-50',
-        border: 'border-green-200'
+        border: 'border-green-200',
+        headerColor: 'text-green-800',
+        headerBackground: 'bg-green-100'
       };
     default:
       return {
         background: 'bg-gray-50',
-        border: 'border-gray-200'
+        border: 'border-gray-200',
+        headerColor: 'text-gray-800',
+        headerBackground: 'bg-gray-100'
       };
   }
 };

@@ -67,7 +67,7 @@ const TaskCard = ({ task }) => {
           {renderFieldLoading('name')}
         </div>
         
-        <EditableSelect
+        {/* <EditableSelect
           value={task.status}
           onSave={(value) => handleFieldUpdate('status', value)}
           options={TASK_STATUS_OPTIONS}
@@ -77,7 +77,7 @@ const TaskCard = ({ task }) => {
             </span>
           )}
         />
-        {renderFieldLoading('status')}
+        {renderFieldLoading('status')} */}
       </div>
       
       <div className="mb-4">
