@@ -4,8 +4,8 @@ import { NavLink } from 'react-router-dom';
 
 const Sidebar = ({ isOpen, setIsOpen }) => {
   const navigation = [
-    { name: 'Dashboard', href: '/', icon: HomeIcon },
-    { name: 'Tasks', href: '/tasks', icon: ClipboardIcon },
+    // { name: 'Dashboard', href: '/', icon: HomeIcon },
+    { name: 'Tasks', href: '/', icon: ClipboardIcon },
   ];
 
   return (
