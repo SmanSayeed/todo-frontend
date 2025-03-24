@@ -105,12 +105,12 @@ const Task = () => {
       <div className="mb-6 flex justify-between items-center">
         <h1 className="text-2xl font-bold text-gray-900">Tasks</h1>
         <div className="flex space-x-2">
-          <Button
+          {/* <Button
             variant="outline"
             onClick={toggleViewMode}
           >
             {viewMode === 'grid' ? 'Switch to Kanban View' : 'Switch to Grid View'}
-          </Button>
+          </Button> */}
           <Button
             variant="primary"
             onClick={handleOpenCreateModal}
