@@ -41,9 +41,9 @@ function App() {
       <Routes>
         {/* Protected Routes */}
         <Route path="/" element={<MainLayout />}>
-          <Route index element={<Home />} />
-          <Route path="/tasks" element={<Task />} />
           <Route index element={<Task />} />
+          {/* <Route path="/tasks" element={<Task />} /> */}
+          {/* <Route index element={<Task />} /> */}
         </Route>
         
         {/* Auth Routes */}
