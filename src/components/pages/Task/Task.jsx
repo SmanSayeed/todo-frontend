@@ -5,7 +5,7 @@ import TaskCard from '../../tasks/TaskCard';
 import TaskFilter from '../../tasks/TaskFilter';
 import Pagination from '../../ui/Pagination';
 import CreateTaskModal from '../../tasks/CreateTaskModal';
-import KanbanBoard from '../../kanban/KanbanBoard';
+import KanbanBoard from '../../Kanban/KanbanBoard';
 import { useTasksRedux } from '../../../hooks/useTaskRedux';
 
 // Memoized component for the empty state
