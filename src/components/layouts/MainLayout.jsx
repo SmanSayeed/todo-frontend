@@ -53,10 +53,10 @@ const MainLayout = () => {
     <div className="min-h-screen bg-gray-100">
       {/* <Toast /> */}
       
-      {/* <Navbar 
+      <Navbar 
         setSidebarOpen={setSidebarOpen} 
       />
-       */}
+      
       <div className="flex">
         {/* <Sidebar 
           isOpen={sidebarOpen} 
