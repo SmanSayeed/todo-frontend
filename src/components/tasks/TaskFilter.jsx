@@ -70,7 +70,7 @@ const TaskFilter = ({ filters, onFilterChange, onResetFilters }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
           {/* Search */}
           <Input
-            label="Search"
+            label="Search (debounced)"
             name="search"
             value={localFilters.search}
             onChange={handleChange}
@@ -80,7 +80,7 @@ const TaskFilter = ({ filters, onFilterChange, onResetFilters }) => {
           {/* Status Filter */}
           <div>
             <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-1">
-              Status
+              Status 
             </label>
             <select
               id="status"
