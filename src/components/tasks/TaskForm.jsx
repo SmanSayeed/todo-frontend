@@ -5,8 +5,11 @@ import Button from '../ui/Button';
 import { TASK_STATUS_OPTIONS } from '../../constants/taskConstants';
 import { formatTaskForApi } from '../../utils/taskUtils';
 import { useTasksRedux } from '../../hooks/useTaskRedux';
+import { useDispatch } from 'react-redux';
+import { addTaskLocally, updateTaskLocally } from '../../redux/slices/taskSlice';
 
 const TaskForm = ({ task = null, onSuccess = () => {}, onCancel = () => {} }) => {
+  const dispatch = useDispatch();
   const { createTask, updateTask, isLoading } = useTasksRedux();
   const [errors, setErrors] = useState({});
   
@@ -69,25 +72,77 @@ const TaskForm = ({ task = null, onSuccess = () => {}, onCancel = () => {} }) =>
       const taskData = formatTaskForApi(formData);
       
       if (task) {
-        // Update existing task
-        await updateTask(task.id, taskData);
+        // Optimistic UI update for task editing
+        const optimisticTask = {
+          ...task,
+          ...taskData,
+          // Ensure fields are properly formatted
+          due_date: taskData.due_date ? taskData.due_date : task.due_date,
+          updated_at: new Date().toISOString()
+        };
+        
+        // Optimistically update the task in the UI
+        dispatch(updateTaskLocally(optimisticTask));
+        
+        // Show success message immediately
         toast.success('Task updated successfully');
+        
+        // Call the success callback
+        onSuccess();
+        
+        // Then make the API call
+        try {
+          await updateTask(task.id, taskData);
+        } catch (error) {
+          // If API call fails, show an error, but don't roll back UI (it's already closed)
+          toast.error('Changes may not have been saved. Please check your connection.');
+          console.error('Error updating task:', error);
+        }
       } else {
-        // Create new task
-        await createTask(taskData);
+        // Create new task with optimistic UI
+        
+        // Create a temporary ID for optimistic UI
+        const tempId = `temp-${Date.now()}`;
+        
+        // Create optimistic task object
+        const optimisticTask = {
+          id: tempId,
+          ...taskData,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          // Ensure due_date is formatted correctly
+          due_date: taskData.due_date ? new Date(taskData.due_date).toISOString() : null
+        };
+        
+        // Add to UI immediately
+        dispatch(addTaskLocally(optimisticTask));
+        
+        // Show success message
         toast.success('Task created successfully');
+        
+        // Call success callback (close modal, etc)
+        onSuccess();
+        
+        // Reset form
+        setFormData({
+          name: '',
+          description: '',
+          status: 'To Do',
+          due_date: ''
+        });
+        
+        // Then make the API call
+        try {
+          await createTask(taskData);
+          // No need to handle success - UI already updated optimistically
+        } catch (error) {
+          // If API call fails, show an error but don't roll back UI (form already closed)
+          toast.error('Task may not have been saved. Please check your connection and try again.');
+          console.error('Error creating task:', error);
+        }
       }
-      
-      // Reset form and call success callback
-      setFormData({
-        name: '',
-        description: '',
-        status: 'To Do',
-        due_date: ''
-      });
-      onSuccess();
     } catch (error) {
-      // Handle validation errors from API
+      // Handle validation errors from validation (not API)
       if (error.errors) {
         setErrors(error.errors);
       } else {

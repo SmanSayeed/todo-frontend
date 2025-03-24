@@ -1,3 +1,4 @@
+// src/redux/slices/taskSlice.js
 import { createSlice } from '@reduxjs/toolkit';
 
 const initialState = {
@@ -10,126 +11,124 @@ const initialState = {
     current_page: 1,
     total_pages: 1
   },
-  isLoading: false,
-  error: null,
   filters: {
     status: '',
+    search: '',
     due_date_from: '',
     due_date_to: '',
-    search: '',
     sort_by: 'created_at',
     sort_direction: 'desc',
-    per_page: 10,
-    page: 1
-  }
+    page: 1,
+    per_page: 10
+  },
+  isLoading: false,
+  error: null
 };
 
 const taskSlice = createSlice({
   name: 'tasks',
   initialState,
   reducers: {
-    // Start loading
-    taskStart: (state) => {
-      state.isLoading = true;
-      state.error = null;
+    // Existing reducers...
+    setTasks: (state, action) => {
+      state.tasks = action.payload;
     },
-    
-    // Tasks loaded
-    tasksLoaded: (state, action) => {
-      state.isLoading = false;
-      state.tasks = action.payload.data;
-      state.meta = action.payload.meta;
-      state.error = null;
-    },
-    
-    // Single task loaded
-    taskLoaded: (state, action) => {
-      state.isLoading = false;
+    setTask: (state, action) => {
       state.task = action.payload;
-      state.error = null;
     },
-    
-    // Task added
-    taskAdded: (state, action) => {
-      state.isLoading = false;
-      state.tasks = [action.payload, ...state.tasks];
-      state.meta.total += 1;
-      state.meta.count += 1;
-      state.error = null;
+    setMeta: (state, action) => {
+      state.meta = action.payload;
     },
-    
-    // Task updated
-    taskUpdated: (state, action) => {
-      state.isLoading = false;
-      state.tasks = state.tasks.map(task => 
-        task.id === action.payload.id ? action.payload : task
-      );
-      if (state.task && state.task.id === action.payload.id) {
-        state.task = action.payload;
-      }
-      state.error = null;
+    updateFilters: (state, action) => {
+      state.filters = { ...state.filters, ...action.payload };
     },
-    
-    // Task deleted
-    taskDeleted: (state, action) => {
-      state.isLoading = false;
-      state.tasks = state.tasks.filter(task => task.id !== action.payload);
-      if (state.task && state.task.id === action.payload) {
-        state.task = null;
-      }
-      state.meta.total -= 1;
-      state.meta.count -= 1;
-      state.error = null;
+    resetFilters: (state) => {
+      state.filters = initialState.filters;
     },
-    
-    // Task operation failed
-    taskFailed: (state, action) => {
-      state.isLoading = false;
+    setLoading: (state, action) => {
+      state.isLoading = action.payload;
+    },
+    setError: (state, action) => {
       state.error = action.payload;
     },
     
-    // Clear errors
-    clearTaskErrors: (state) => {
-      state.error = null;
+    // New reducers for optimistic UI updates
+    addTaskLocally: (state, action) => {
+      // Add the new task to the beginning of the array
+      state.tasks = [action.payload, ...state.tasks];
+      
+      // Update meta data
+      if (state.meta) {
+        state.meta.total = state.meta.total + 1;
+        state.meta.count = Math.min(state.meta.count + 1, state.meta.per_page);
+      }
     },
     
-    // Update filters
-    updateFilters: (state, action) => {
-      state.filters = {
-        ...state.filters,
-        ...action.payload,
-        // Reset to page 1 when filters change (except when explicitly changing page)
-        page: action.payload.hasOwnProperty('page') ? action.payload.page : 1
-      };
+    updateTaskLocally: (state, action) => {
+      const updatedTask = action.payload;
+      
+      // Update the task in the task list
+      const taskIndex = state.tasks.findIndex(task => task.id === updatedTask.id);
+      if (taskIndex !== -1) {
+        state.tasks[taskIndex] = updatedTask;
+      }
+      
+      // If the individual task is currently viewed, update it too
+      if (state.task && state.task.id === updatedTask.id) {
+        state.task = updatedTask;
+      }
     },
     
-    // Reset filters
-    resetFilters: (state) => {
-      state.filters = initialState.filters;
+    // Helper for temporary tasks to be replaced with real ones
+    replaceTemporaryTask: (state, action) => {
+      const { tempId, realTask } = action.payload;
+      const taskIndex = state.tasks.findIndex(task => task.id === tempId);
+      
+      if (taskIndex !== -1) {
+        state.tasks[taskIndex] = realTask;
+      }
+    },
+    
+    // Remove a task from the list (for delete operations)
+    removeTaskLocally: (state, action) => {
+      const taskId = action.payload;
+      state.tasks = state.tasks.filter(task => task.id !== taskId);
+      
+      // Update meta data
+      if (state.meta) {
+        state.meta.total = Math.max(0, state.meta.total - 1);
+        state.meta.count = Math.max(0, state.meta.count - 1);
+      }
+      
+      // If the removed task is the current task, clear it
+      if (state.task && state.task.id === taskId) {
+        state.task = null;
+      }
     }
   }
 });
 
 // Export actions
 export const { 
-  taskStart, 
-  tasksLoaded, 
-  taskLoaded, 
-  taskAdded, 
-  taskUpdated, 
-  taskDeleted, 
-  taskFailed, 
-  clearTaskErrors,
-  updateFilters,
-  resetFilters
+  setTasks, 
+  setTask, 
+  setMeta, 
+  updateFilters, 
+  resetFilters, 
+  setLoading, 
+  setError,
+  addTaskLocally,
+  updateTaskLocally,
+  replaceTemporaryTask,
+  removeTaskLocally
 } = taskSlice.actions;
 
-// Selectors
-export const selectTasks = (state) => state.tasks.tasks;
-export const selectTask = (state) => state.tasks.task;
-export const selectTaskMeta = (state) => state.tasks.meta;
-export const selectTaskFilters = (state) => state.tasks.filters;
-export const selectTasksLoading = (state) => state.tasks.isLoading;
-export const selectTaskError = (state) => state.tasks.error;
+// Export selectors
+export const selectTasks = state => state.tasks.tasks;
+export const selectTask = state => state.tasks.task;
+export const selectTaskMeta = state => state.tasks.meta;
+export const selectTaskFilters = state => state.tasks.filters;
+export const selectTasksLoading = state => state.tasks.isLoading;
+export const selectTaskError = state => state.tasks.error;
 
 export default taskSlice.reducer;

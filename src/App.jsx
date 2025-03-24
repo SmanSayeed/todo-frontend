@@ -42,16 +42,7 @@ function App() {
         {/* Protected Routes */}
         <Route path="/" element={<MainLayout />}>
           <Route index element={<Task />} />
-          {/* <Route path="/tasks" element={<Task />} /> */}
-          {/* <Route index element={<Task />} /> */}
         </Route>
-        
-        {/* Auth Routes */}
-        <Route element={<AuthLayout />}>
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-        </Route>
-        
         {/* Fallback Route */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
