@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 
 /**
  * Custom hook to manage drag and drop functionality for Kanban board
+ * with optimistic UI updates
  * 
  * @param {Object} params - Hook parameters
  * @param {Function} params.onDrop - Callback when item is dropped
@@ -23,7 +24,6 @@ export const useDragAndDrop = ({ onDrop }) => {
   // Track which column the item is being dragged over
   const handleDragEnter = useCallback((e, column) => {
     e.preventDefault();
-    e.stopPropagation();
     
     if (draggedItem && draggedItem.currentStatus !== column) {
       setDraggedOverColumn(column);
@@ -33,16 +33,13 @@ export const useDragAndDrop = ({ onDrop }) => {
   // Required for drag over - prevents default behavior
   const handleDragOver = useCallback((e) => {
     e.preventDefault();
-    e.stopPropagation();
     e.dataTransfer.dropEffect = 'move';
   }, []);
   
   // Handle when the drag ends
   const handleDragEnd = useCallback((e) => {
-    e.preventDefault();
-    
     if (draggedItem && draggedOverColumn && draggedItem.currentStatus !== draggedOverColumn) {
-      // Execute the drop callback
+      // Execute the drop callback with optimistic update
       onDrop(draggedItem.id, draggedOverColumn);
     }
     

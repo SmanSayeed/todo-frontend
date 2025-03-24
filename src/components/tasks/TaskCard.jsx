@@ -1,19 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, memo } from 'react';
 import { toast } from 'react-hot-toast';
 import Button from '../ui/Button';
 import { formatDate } from '../../utils/taskUtils';
 import { getStatusColorClass, isTaskOverdue } from '../../utils/taskUtils';
-import { useTasksRedux } from '../../hooks/useTaskRedux';
-import { TASK_STATUS_OPTIONS } from '../../constants/taskConstants';
-import EditableText from '../common/Editables/EditableText';
-import EditableSelect from '../common/Editables/EditableSelect';
-import EditableDate from '../common/Editables/EditableDate';
 import useInlineTaskEdit from '../../hooks/useInlineTaskEdit';
+import EditableText from '../common/Editables/EditableText';
+import EditableDate from '../common/Editables/EditableDate';
+import { useTasksRedux } from '../../hooks/useTaskRedux';
 
-const TaskCard = ({ task }) => {
+const TaskCard = memo(({ task: propTask }) => {
   const { deleteTask, isLoading } = useTasksRedux();
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const { handleFieldUpdate, isUpdatingField } = useInlineTaskEdit(task);
+  
+  // Use the optimistic hook to get the local task and update handlers
+  const { handleFieldUpdate, isUpdatingField, task } = useInlineTaskEdit(propTask);
   
   const handleDelete = async () => {
     if (!confirmDelete) {
@@ -67,17 +67,9 @@ const TaskCard = ({ task }) => {
           {renderFieldLoading('name')}
         </div>
         
-        {/* <EditableSelect
-          value={task.status}
-          onSave={(value) => handleFieldUpdate('status', value)}
-          options={TASK_STATUS_OPTIONS}
-          displayRenderer={(value) => (
-            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColorClass(value)}`}>
-              {value}
-            </span>
-          )}
-        />
-        {renderFieldLoading('status')} */}
+        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColorClass(task.status)}`}>
+          {task.status}
+        </span>
       </div>
       
       <div className="mb-4">
@@ -142,6 +134,8 @@ const TaskCard = ({ task }) => {
       </div>
     </div>
   );
-};
+});
+
+TaskCard.displayName = 'TaskCard';
 
 export default TaskCard;

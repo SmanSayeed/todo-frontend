@@ -7,7 +7,6 @@ import Pagination from '../../ui/Pagination';
 import CreateTaskModal from '../../tasks/CreateTaskModal';
 import KanbanBoard from '../../kanban/KanbanBoard';
 import { useTasksRedux } from '../../../hooks/useTaskRedux';
-import { toast } from 'react-hot-toast';
 
 // Memoized component for the empty state
 const EmptyState = memo(({ hasFilters, onCreateTask }) => (
@@ -28,13 +27,12 @@ const EmptyState = memo(({ hasFilters, onCreateTask }) => (
 ));
 
 // Memoized grid view component
-const TaskGrid = memo(({ tasks, onEdit }) => (
+const TaskGrid = memo(({ tasks }) => (
   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
     {tasks.map(task => (
       <TaskCard 
         key={task.id} 
         task={task}
-        onEdit={() => onEdit(task)}
       />
     ))}
   </div>
@@ -48,8 +46,7 @@ const Task = () => {
     isLoading, 
     getTasks, 
     setFilters, 
-    clearFilters,
-    updateTask
+    clearFilters
   } = useTasksRedux();
   
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -79,11 +76,6 @@ const Task = () => {
     setIsModalOpen(true);
   }, []);
   
-  const handleOpenEditModal = useCallback((task) => {
-    setEditingTask(task);
-    setIsModalOpen(true);
-  }, []);
-  
   const handleCloseModal = useCallback(() => {
     setIsModalOpen(false);
     setEditingTask(null);
@@ -94,27 +86,11 @@ const Task = () => {
     getTasks();
   }, [getTasks]);
   
-  const handleStatusChange = useCallback(async (taskId, newStatus) => {
-    try {
-      // Find the task by ID
-      const task = tasks.find(t => t.id === taskId);
-      if (!task) return;
-      
-      // Only update if status has actually changed
-      if (task.status === newStatus) return;
-      
-      // Call the API to update the task status
-      await updateTask(taskId, { status: newStatus });
-      
-      // Refresh tasks to get the updated data
-      getTasks();
-      
-      toast.success(`Task moved to ${newStatus}`);
-    } catch (error) {
-      toast.error('Failed to update task status');
-      console.error('Error updating task status:', error);
-    }
-  }, [tasks, updateTask, getTasks]);
+  // This function is now simplified since the actual update happens in the KanbanBoard component
+  const handleStatusChange = useCallback(() => {
+    // Refresh the task list to ensure all components have the latest data
+    getTasks();
+  }, [getTasks]);
   
   const toggleViewMode = useCallback(() => {
     setViewMode(prev => prev === 'grid' ? 'kanban' : 'grid');
@@ -151,7 +127,7 @@ const Task = () => {
       />
       
       {/* Tasks Display */}
-      {isLoading ? (
+      {isLoading && tasks.length === 0 ? (
         <div className="flex justify-center py-10">
           <Loader size="lg" />
         </div>
@@ -161,17 +137,23 @@ const Task = () => {
           onCreateTask={handleOpenCreateModal} 
         />
       ) : viewMode === 'kanban' ? (
-        // Kanban View
+        // Kanban View - now with optimistic updates
         <KanbanBoard 
           tasks={tasks} 
           onStatusChange={handleStatusChange}
         />
       ) : (
-        // Grid View
+        // Grid View - now with optimistic updates in each card
         <TaskGrid 
-          tasks={tasks} 
-          onEdit={handleOpenEditModal} 
+          tasks={tasks}
         />
+      )}
+      
+      {/* Loading indicator for filtered results */}
+      {isLoading && tasks.length > 0 && (
+        <div className="flex justify-center py-4">
+          <Loader size="md" />
+        </div>
       )}
       
       {/* Pagination - Only for grid view */}

@@ -3,6 +3,8 @@ import { getStatusColumnStyles } from '../../utils/taskUtils';
 import { TASK_STATUS } from '../../constants/taskConstants';
 import TaskCard from '../tasks/TaskCard';
 import { useDragAndDrop } from '../../hooks/useDragAndDrop';
+import { useTasksRedux } from '../../hooks/useTaskRedux';
+import { toast } from 'react-hot-toast';
 
 // Memoized TaskCard wrapper component
 const DraggableTaskCard = memo(({ task, onDragStart, onDragEnd, isDragging }) => {
@@ -27,7 +29,16 @@ const DraggableTaskCard = memo(({ task, onDragStart, onDragEnd, isDragging }) =>
   );
 });
 
-const KanbanBoard = ({ tasks, onStatusChange }) => {
+const KanbanBoard = ({ tasks: propTasks, onStatusChange }) => {
+  // Local state for optimistic updates
+  const [localTasks, setLocalTasks] = useState(propTasks);
+  const { updateTask } = useTasksRedux();
+  
+  // Update local tasks when prop tasks change
+  useEffect(() => {
+    setLocalTasks(propTasks);
+  }, [propTasks]);
+  
   // Memoize the grouped tasks to prevent unnecessary recalculations
   const columns = useMemo(() => {
     const grouped = {
@@ -36,7 +47,7 @@ const KanbanBoard = ({ tasks, onStatusChange }) => {
       [TASK_STATUS.DONE]: []
     };
     
-    tasks.forEach(task => {
+    localTasks.forEach(task => {
       const column = task.status;
       if (grouped[column]) {
         grouped[column].push(task);
@@ -44,17 +55,40 @@ const KanbanBoard = ({ tasks, onStatusChange }) => {
     });
     
     return grouped;
-  }, [tasks]);
+  }, [localTasks]);
   
-  // Memoize the onDrop callback
-  const handleTaskDrop = useCallback((taskId, newStatus) => {
-    if (onStatusChange) {
-      const task = tasks.find(t => t.id === taskId);
-      if (task && task.status !== newStatus) {
+  // Optimistic update handler for task status changes
+  const handleTaskDrop = useCallback(async (taskId, newStatus) => {
+    // Find the task
+    const taskIndex = localTasks.findIndex(t => t.id === taskId);
+    if (taskIndex === -1) return;
+    
+    const task = localTasks[taskIndex];
+    if (task.status === newStatus) return; // No change needed
+    
+    try {
+      // Optimistic update - update UI immediately
+      const updatedTasks = [...localTasks];
+      updatedTasks[taskIndex] = { ...task, status: newStatus };
+      setLocalTasks(updatedTasks);
+      
+      // API call
+      await updateTask(taskId, { status: newStatus });
+      
+      // Success notification
+      toast.success(`Task moved to ${newStatus}`);
+      
+      // Notify parent component if needed
+      if (onStatusChange) {
         onStatusChange(taskId, newStatus);
       }
+    } catch (error) {
+      // Revert optimistic update on error
+      toast.error('Failed to update task status');
+      setLocalTasks(propTasks); // Revert to original state
+      console.error('Error updating task status:', error);
     }
-  }, [tasks, onStatusChange]);
+  }, [localTasks, updateTask, onStatusChange, propTasks]);
   
   const {
     draggedItem,
@@ -77,6 +111,11 @@ const KanbanBoard = ({ tasks, onStatusChange }) => {
             className={`flex-1 ${styles.background} ${styles.border} border rounded-lg overflow-hidden flex flex-col h-full min-h-[500px]`}
             onDragEnter={(e) => handleDragEnter(e, status)}
             onDragOver={handleDragOver}
+            onDrop={(e) => {
+              e.preventDefault();
+              // This helps ensure the drop event is recognized
+              // The actual logic is in handleDragEnd
+            }}
           >
             {/* Column Header */}
             <div className={`${styles.headerBackground || ''} ${styles.headerColor || ''} px-4 py-3 font-medium flex items-center`}>
@@ -119,4 +158,4 @@ const KanbanBoard = ({ tasks, onStatusChange }) => {
   );
 };
 
-export default KanbanBoard;
+export default memo(KanbanBoard);
